@@ -59,6 +59,84 @@ npm run build
 3. Use the toggle button to switch between ascending and descending order
 4. Click "Reset" to clear the form and start over
 
+## Testing Dummy Data
+
+Use these pre-prepared data sets to quickly test different scenarios:
+
+### Basic Valid Data
+```
+10.5, 25, 3.14, 100, 7.89
+```
+```
+1, 2, 3, 4, 5
+```
+```
+100, 50, 75, 25, 90
+```
+
+### Edge Cases
+```
+0, -5, 10.5, -3.14, 100
+```
+```
+0.001, 999999, -0.5, 42
+```
+```
+1.23456789, 0, -100.5
+```
+
+### Invalid Data (for error testing)
+```
+10, abc, 25, def
+```
+```
+1, 2, , 4, 5
+```
+```
+text, 123, more text
+```
+
+### Mixed Valid/Invalid
+```
+10.5, invalid, 25, 3.14, error, 100
+```
+```
+1, 2, abc, 4, def, 6
+```
+
+### Performance Testing (Large Dataset)
+```
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+```
+
+### Financial Transaction Simulation
+```
+1250.75, 89.99, 2500.00, 45.50, 999.99, 12.34, 5000.00, 234.56
+```
+```
+-150.25, 300.75, -89.50, 1200.00, -45.99
+```
+
+### Quick Copy-Paste Options
+
+**Scenario 1 - Basic Testing:**
+`5, 2, 8, 1, 9, 3`
+
+**Scenario 2 - Decimal Testing:**
+`10.5, 2.3, 8.7, 1.1, 9.9`
+
+**Scenario 3 - Negative Numbers:**
+`-5, 10, -2, 8, -1`
+
+**Scenario 4 - Error Testing:**
+`5, abc, 8, def, 9`
+
+**Scenario 5 - Empty Values:**
+`5, , 8, , 9`
+
+**Scenario 6 - Large Numbers:**
+`1000000, 500000, 750000, 250000`
+
 ## Key Design Decisions
 
 ### Architecture
