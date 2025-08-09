@@ -1,103 +1,54 @@
-# Unit Testing Breakdown - SARS Transaction Processor
+# Testing Plan for SARS Transaction Processor
 
-## Overview
+Okay so I had to put together this testing plan pretty quickly since I'm juggling 3 projects for this interview. Here's what I'm thinking for testing the transaction processor app.
 
-This document provides a comprehensive breakdown of the unit testing strategy and implementation for the SARS Transaction Processor React TypeScript application. The testing approach focuses on ensuring reliability, maintainability, and user experience quality.
+## What I'm Using
+- Jest (comes with create-react-app)
+- React Testing Library 
+- TypeScript for the tests too
 
-## Testing Framework & Tools
+Basically just the standard React testing setup, nothing fancy.
 
-### Core Testing Stack
-- **Jest**: JavaScript testing framework for test execution and assertions
-- **React Testing Library**: Component testing with focus on user behavior
-- **@testing-library/user-event**: Realistic user interaction simulation
-- **TypeScript**: Type safety in test files
+## Main Test Categories
 
-### Testing Philosophy
-- **User-Centric Testing**: Tests focus on what users see and do, not implementation details
-- **Accessibility-First**: Queries prioritize accessible elements (roles, labels, text)
-- **Behavior-Driven**: Tests verify expected behaviors rather than internal state
-- **Isolation**: Each test is independent and can run in any order
+### 1. Basic Rendering
+Make sure the form shows up with:
+- Input textarea
+- Process button (disabled initially)
+- Reset button
+- No results displayed yet
 
-## Test Structure & Organization
+### 2. User Interactions
+- Typing in the input enables the process button
+- Clicking process shows sorted results
+- Reset button clears everything
+- Sort toggle switches between asc/desc
 
-### File Organization
-```
-src/
-├── components/
-│   ├── TransactionProcessor.tsx
-│   ├── TransactionProcessor.css
-│   └── TransactionProcessor.test.tsx  # Co-located with component
-```
+### 3. Input Validation
+Test with different inputs:
+- Valid numbers: `1, 2, 3` → should work
+- Invalid stuff: `abc, def` → should show error
+- Mixed: `1, abc, 3` → show error for invalid parts
+- Edge cases: negative numbers, decimals, zero
 
-### Test Naming Convention
-- Descriptive test names that explain the expected behavior
-- Format: "should [expected behavior] when [condition]"
-- Example: "should display error message when invalid input is provided"
+### 4. Sorting Logic
+- Default ascending: `3, 1, 2` → `1, 2, 3`
+- Descending toggle: `1, 2, 3` → `3, 2, 1`
+- Works with negatives and decimals
 
-## Testing Categories
+### 5. Error Handling
+- Shows which values are invalid
+- Error disappears when you fix the input
+- Doesn't crash on weird input
 
-### 1. Component Rendering Tests
-
-**Purpose**: Verify that components render correctly in their initial state
-
-**Test Cases**:
-- Initial form elements are present (textarea, buttons)
-- Proper ARIA labels and accessibility attributes
-- Correct initial button states (disabled/enabled)
-- No results displayed initially
-
-**Implementation Approach**:
+## Sample Test
 ```javascript
-test('should render initial form elements correctly', () => {
-  render(<TransactionProcessor />);
-  
-  expect(screen.getByLabelText(/enter numerical values/i)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /process values/i })).toBeDisabled();
-  expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument();
-});
-```
-
-### 2. User Interaction Tests
-
-**Purpose**: Ensure user interactions work as expected
-
-**Test Cases**:
-- Input field accepts text input
-- Process button becomes enabled when input is provided
-- Reset button clears form and results
-- Toggle button switches sort order
-
-**Implementation Approach**:
-```javascript
-test('should enable process button when input is provided', async () => {
+test('processes valid numbers correctly', async () => {
   const user = userEvent.setup();
   render(<TransactionProcessor />);
   
-  const input = screen.getByLabelText(/enter numerical values/i);
-  await user.type(input, '1, 2, 3');
-  
-  expect(screen.getByRole('button', { name: /process values/i })).toBeEnabled();
-});
-```
-
-### 3. Input Validation Tests
-
-**Purpose**: Verify that input validation works correctly for all scenarios
-
-**Test Cases**:
-- Valid numerical inputs (integers, decimals, negative numbers)
-- Invalid inputs (text, special characters, empty values)
-- Mixed valid and invalid inputs
-- Edge cases (zero, very large numbers, scientific notation)
-
-**Implementation Approach**:
-```javascript
-test('should process valid numerical inputs correctly', async () => {
-  const user = userEvent.setup();
-  render(<TransactionProcessor />);
-  
-  await user.type(screen.getByLabelText(/enter numerical values/i), '10, 5, 15');
-  await user.click(screen.getByRole('button', { name: /process values/i }));
+  await user.type(screen.getByLabelText(/enter numerical/i), '10, 5, 15');
+  await user.click(screen.getByRole('button', { name: /process/i }));
   
   expect(screen.getByText('5')).toBeInTheDocument();
   expect(screen.getByText('10')).toBeInTheDocument();
@@ -105,204 +56,26 @@ test('should process valid numerical inputs correctly', async () => {
 });
 ```
 
-### 4. Sorting Functionality Tests
+## Coverage Goals
+Aiming for:
+- 90%+ statements
+- 85%+ branches
+- All functions tested
 
-**Purpose**: Ensure sorting algorithms work correctly
+Not going crazy with 100% coverage since this is a small app and I have other projects to work on.
 
-**Test Cases**:
-- Ascending order sorting (default)
-- Descending order sorting
-- Toggle between sort orders
-- Sorting with negative numbers
-- Sorting with decimal numbers
+## What I'd Add Later
+- Performance tests with large datasets
+- Accessibility tests (keyboard navigation, screen readers)
+- Visual regression tests
+- E2E tests with Cypress maybe
 
-**Implementation Approach**:
-```javascript
-test('should sort numbers in ascending order by default', async () => {
-  const user = userEvent.setup();
-  render(<TransactionProcessor />);
-  
-  await user.type(screen.getByLabelText(/enter numerical values/i), '30, 10, 20');
-  await user.click(screen.getByRole('button', { name: /process values/i }));
-  
-  const results = screen.getAllByTestId('result-item');
-  expect(results[0]).toHaveTextContent('10');
-  expect(results[1]).toHaveTextContent('20');
-  expect(results[2]).toHaveTextContent('30');
-});
-```
+But honestly, for a 5-day interview project with 2 other apps to build, the basic unit tests should be enough to show I know what I'm doing.
 
-### 5. Error Handling Tests
-
-**Purpose**: Verify proper error handling and user feedback
-
-**Test Cases**:
-- Error messages for invalid inputs
-- Specific error details (which values are invalid)
-- Error state clearing when valid input is provided
-- Graceful handling of mixed valid/invalid inputs
-
-**Implementation Approach**:
-```javascript
-test('should display error message for invalid inputs', async () => {
-  const user = userEvent.setup();
-  render(<TransactionProcessor />);
-  
-  await user.type(screen.getByLabelText(/enter numerical values/i), 'abc, 123, def');
-  await user.click(screen.getByRole('button', { name: /process values/i }));
-  
-  expect(screen.getByText(/invalid values found/i)).toBeInTheDocument();
-  expect(screen.getByText(/abc.*def/)).toBeInTheDocument();
-});
-```
-
-### 6. State Management Tests
-
-**Purpose**: Ensure component state is managed correctly
-
-**Test Cases**:
-- Form reset functionality
-- State persistence during interactions
-- Button state changes based on input
-- Results state management
-
-**Implementation Approach**:
-```javascript
-test('should reset form and clear results when reset button is clicked', async () => {
-  const user = userEvent.setup();
-  render(<TransactionProcessor />);
-  
-  // Process some data first
-  await user.type(screen.getByLabelText(/enter numerical values/i), '1, 2, 3');
-  await user.click(screen.getByRole('button', { name: /process values/i }));
-  
-  // Reset
-  await user.click(screen.getByRole('button', { name: /reset/i }));
-  
-  expect(screen.getByLabelText(/enter numerical values/i)).toHaveValue('');
-  expect(screen.queryByTestId('results-container')).not.toBeInTheDocument();
-});
-```
-
-### 7. Accessibility Tests
-
-**Purpose**: Ensure the application is accessible to all users
-
-**Test Cases**:
-- ARIA labels are present and correct
-- Keyboard navigation works
-- Screen reader compatibility
-- Focus management
-
-**Implementation Approach**:
-```javascript
-test('should have proper ARIA labels for accessibility', () => {
-  render(<TransactionProcessor />);
-  
-  expect(screen.getByLabelText(/enter numerical values/i)).toHaveAttribute('aria-describedby');
-  expect(screen.getByRole('button', { name: /process values/i })).toBeInTheDocument();
-  expect(screen.getByRole('main')).toBeInTheDocument();
-});
-```
-
-## Testing Utilities & Helpers
-
-### Custom Render Function
-```javascript
-const renderTransactionProcessor = (props = {}) => {
-  return render(<TransactionProcessor {...props} />);
-};
-```
-
-### Test Data Generators
-```javascript
-const generateValidNumbers = (count) => {
-  return Array.from({ length: count }, (_, i) => (i + 1) * 10).join(', ');
-};
-
-const generateInvalidData = () => {
-  return 'abc, 123, def, 456, xyz';
-};
-```
-
-## Test Coverage Strategy
-
-### Coverage Goals
-- **Statements**: 95%+
-- **Branches**: 90%+
-- **Functions**: 100%
-- **Lines**: 95%+
-
-### Coverage Areas
-1. **Happy Path**: All main functionality works as expected
-2. **Edge Cases**: Boundary conditions and unusual inputs
-3. **Error Scenarios**: All error conditions are handled
-4. **User Interactions**: All possible user actions are tested
-5. **Accessibility**: Screen reader and keyboard navigation
-
-## Performance Testing Considerations
-
-### Large Dataset Testing
-```javascript
-test('should handle large datasets efficiently', async () => {
-  const largeDataset = Array.from({ length: 1000 }, (_, i) => i).join(', ');
-  // Test processing time and memory usage
-});
-```
-
-### Async Operation Testing
-```javascript
-test('should handle async operations correctly', async () => {
-  // Use waitFor for async state updates
-  await waitFor(() => {
-    expect(screen.getByText(/results/i)).toBeInTheDocument();
-  });
-});
-```
-
-## Continuous Integration
-
-### Test Execution
-- Tests run automatically on every commit
-- Coverage reports generated and tracked
-- Failed tests block deployment
-
-### Test Commands
+## Running Tests
 ```bash
-npm test                    # Run tests in watch mode
-npm run test:coverage      # Run tests with coverage report
-npm run test:ci           # Run tests once (CI environment)
+npm test              # watch mode
+npm run test:coverage # see coverage
 ```
 
-## Future Testing Enhancements
-
-### Integration Testing
-- Test component interactions with external APIs
-- End-to-end user journey testing
-- Cross-browser compatibility testing
-
-### Visual Regression Testing
-- Screenshot comparison testing
-- UI consistency across different screen sizes
-- Theme and styling verification
-
-### Performance Testing
-- Load testing with large datasets
-- Memory leak detection
-- Rendering performance benchmarks
-
-## Best Practices Implemented
-
-1. **Test Independence**: Each test can run in isolation
-2. **Descriptive Names**: Test names clearly describe expected behavior
-3. **Arrange-Act-Assert**: Clear test structure
-4. **User-Centric Queries**: Tests use accessible queries
-5. **Async Handling**: Proper handling of asynchronous operations
-6. **Error Boundaries**: Tests verify error handling
-7. **Cleanup**: Proper test cleanup to prevent memory leaks
-
-## Conclusion
-
-This comprehensive unit testing strategy ensures the SARS Transaction Processor is reliable, maintainable, and provides an excellent user experience. The tests cover all critical functionality while maintaining focus on user behavior and accessibility, making the application robust and production-ready.
-
-The testing approach demonstrates professional software development practices and provides confidence in the application's quality and reliability for the SARS technical assessment.
+That's pretty much it. The tests focus on user behavior rather than implementation details, which is what React Testing Library is all about. Should catch the main bugs and give confidence the app works as expected.
