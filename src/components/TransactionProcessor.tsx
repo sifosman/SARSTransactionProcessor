@@ -1,11 +1,8 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useMemo, useId } from 'react';
 import './TransactionProcessor.css';
+import { parseCommaSeparatedNumbers, ValidationResult } from '../utils/numberParsing';
 
-interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-  numbers: number[];
-}
+// ValidationResult moved to util for single source of truth
 
 type SortOrder = 'asc' | 'desc';
 
@@ -18,64 +15,28 @@ const TransactionProcessor: React.FC = () => {
     numbers: []
   });
   const [hasProcessed, setHasProcessed] = useState<boolean>(false);
+  const inputId = useId();
 
-  const validateAndParseInput = useCallback((input: string): ValidationResult => {
-    if (!input.trim()) {
-      return {
-        isValid: false,
-        errors: ['Please enter some values'],
-        numbers: []
-      };
-    }
-
-    const values = input.split(',').map(val => val.trim()).filter(val => val !== '');
-    const errors: string[] = [];
-    const numbers: number[] = [];
-
-    if (values.length === 0) {
-      return {
-        isValid: false,
-        errors: ['Please enter valid comma-separated values'],
-        numbers: []
-      };
-    }
-
-    values.forEach((value, index) => {
-      const num = parseFloat(value);
-      if (isNaN(num)) {
-        errors.push(`Value "${value}" at position ${index + 1} is not a valid number`);
-      } else {
-        numbers.push(num);
-      }
-    });
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-      numbers
-    };
-  }, []);
-
-  const handleInputChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(event.target.value);
-  }, []);
+  };
 
-  const handleProcess = useCallback(() => {
-    const result = validateAndParseInput(inputValue);
+  const handleProcess = () => {
+    const result = parseCommaSeparatedNumbers(inputValue);
     setValidationResult(result);
     setHasProcessed(true);
-  }, [inputValue, validateAndParseInput]);
+  };
 
-  const handleToggleSort = useCallback(() => {
+  const handleToggleSort = () => {
     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
-  }, []);
+  };
 
-  const handleReset = useCallback(() => {
+  const handleReset = () => {
     setInputValue('');
     setValidationResult({ isValid: true, errors: [], numbers: [] });
     setHasProcessed(false);
     setSortOrder('asc');
-  }, []);
+  };
 
   const sortedNumbers = useMemo(() => {
     if (!validationResult.isValid || validationResult.numbers.length === 0) {
@@ -90,11 +51,11 @@ const TransactionProcessor: React.FC = () => {
   return (
     <div className="transaction-processor">
       <div className="input-section">
-        <label htmlFor="transaction-input" className="input-label">
+        <label htmlFor={`transaction-input-${inputId}`} className="input-label">
           Enter Transaction Values (comma-separated):
         </label>
         <textarea
-          id="transaction-input"
+          id={`transaction-input-${inputId}`}
           className={`input-field ${validationResult.errors.length > 0 ? 'error' : ''}`}
           value={inputValue}
           onChange={handleInputChange}
@@ -127,7 +88,7 @@ const TransactionProcessor: React.FC = () => {
       {hasProcessed && (
         <div className="results-section">
           {validationResult.errors.length > 0 && (
-            <div id="validation-errors" className="error-section" role="alert">
+            <div id="validation-errors" className="error-section" role="alert" aria-live="assertive">
               <h3>Validation Errors:</h3>
               <ul>
                 {validationResult.errors.map((error, index) => (

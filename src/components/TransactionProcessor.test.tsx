@@ -8,6 +8,61 @@ describe('TransactionProcessor', () => {
     render(<TransactionProcessor />);
   });
 
+  test('rejects malformed decimals like 3.14.15', async () => {
+    const input = screen.getByLabelText(/enter transaction values/i);
+    const processButton = screen.getByRole('button', { name: /process values/i });
+
+    await userEvent.type(input, '3.14.15, 2');
+    await userEvent.click(processButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/validation errors/i)).toBeInTheDocument();
+      expect(screen.getByText(/"3.14.15" at position 1 is not a valid number/i)).toBeInTheDocument();
+    });
+  });
+
+  test('rejects scientific notation if not allowed', async () => {
+    const input = screen.getByLabelText(/enter transaction values/i);
+    const processButton = screen.getByRole('button', { name: /process values/i });
+
+    await userEvent.type(input, '1e3, 2');
+    await userEvent.click(processButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/validation errors/i)).toBeInTheDocument();
+      expect(screen.getByText(/"1e3" at position 1 is not a valid number/i)).toBeInTheDocument();
+    });
+  });
+
+  test('rejects Infinity and NaN tokens', async () => {
+    const input = screen.getByLabelText(/enter transaction values/i);
+    const processButton = screen.getByRole('button', { name: /process values/i });
+
+    await userEvent.type(input, 'Infinity, NaN, 5');
+    await userEvent.click(processButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/validation errors/i)).toBeInTheDocument();
+      expect(screen.getByText(/"Infinity" at position 1 is not a valid number/i)).toBeInTheDocument();
+      expect(screen.getByText(/"NaN" at position 2 is not a valid number/i)).toBeInTheDocument();
+    });
+  });
+
+  test('accepts edge decimal formats like .5 and 5.', async () => {
+    const input = screen.getByLabelText(/enter transaction values/i);
+    const processButton = screen.getByRole('button', { name: /process values/i });
+
+    await userEvent.type(input, '.5, 5.');
+    await userEvent.click(processButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/sorted results/i)).toBeInTheDocument();
+      // Ascending order by default
+      expect(screen.getByText('0.5')).toBeInTheDocument();
+      expect(screen.getByText('5')).toBeInTheDocument();
+    });
+  });
+
   test('renders the component with initial elements', () => {
     expect(screen.getByLabelText(/enter transaction values/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/e.g., 10.5, 25, 3.14, 100, 7.89/i)).toBeInTheDocument();
