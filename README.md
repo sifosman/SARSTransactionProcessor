@@ -26,6 +26,11 @@ A React  app for processing and sorting numerical transaction values, built for 
 - Disallowed: scientific notation (`1e3`), `Infinity`, `NaN`, malformed tokens (`3.14.15`), empty tokens
 - If any token is invalid, errors are shown and results are hidden
 
+## Technical requirements (how we met them)
+
+- __Functional components with React Hooks__: The UI is built with function components using `useState`, `useMemo`, and `useId` where appropriate for local state, derived values, and accessibility.
+- __Scalable, maintainable structure__: Validation is isolated in `src/utils/numberParsing.ts`, the main feature lives in `src/components/TransactionProcessor.tsx` with its own CSS and tests, and app-level layout is kept in `src/App.tsx` for clear separation of concerns.
+
 ## Contributing
 
 This project was built specifically for the SARS technical assessment.
