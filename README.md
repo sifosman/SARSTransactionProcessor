@@ -26,6 +26,22 @@ A React  app for processing and sorting numerical transaction values, built for 
 - Disallowed: scientific notation (`1e3`), `Infinity`, `NaN`, malformed tokens (`3.14.15`), empty tokens
 - If any token is invalid, errors are shown and results are hidden
 
+## Testing Examples 
+Valid integers only (ascending/descending check)
+45, 2, 999, -10, 0
+
+Valid decimals and integers mixed
+3.14, .5, 7, -2.71, 100.0
+   
+Invalid token (should trigger error and hide results)
+25, abc, 10.5
+
+Extra spaces and valid negatives
+ -5 ,  200 , -0.25 , 15
+ 
+Multiple invalid tokens at once
+5..0, 1e3, Infinity, NaN
+
 ## Technical requirements (how we met them)
 
 - __Functional components with React Hooks__: The UI is built with function components using `useState`, `useMemo`, and `useId` where appropriate for local state, derived values, and accessibility.
